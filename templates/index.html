@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lung Cancer Prediction | SVM & CNN Medical AI</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* Accessible error styles following modern web guidelines */
+    input:user-invalid,
+    input.user-invalid-fallback {
+      border-color: #ef4444;
+      background-color: #fef2f2;
+    }
+    input:user-invalid ~ .error-msg,
+    input.user-invalid-fallback ~ .error-msg {
+      display: block;
+    }
+    .error-msg {
+      display: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen font-sans antialiased flex flex-col">
+
+  <!-- Navigation / Header -->
+  <header class="bg-indigo-900 text-white shadow-md border-b border-indigo-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="p-2.5 bg-indigo-700 rounded-xl shadow-inner text-indigo-200">
+          <i data-lucide="activity" class="w-7 h-7 text-teal-400"></i>
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold tracking-tight">OncoVision AI</h1>
+          <p class="text-xs text-indigo-300">Lung Cancer CT Scan Detection using SVM (PCA) & CNN</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2 text-xs font-medium">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Model Live on Cloud
+        </span>
+        <a href="https://github.com/Vishnu5g67/lung-cancer-detection" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-indigo-800 hover:bg-indigo-700 text-indigo-100 transition border border-indigo-700">
+          <i data-lucide="github" class="w-4 h-4"></i>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- KPI / Accuracy Highlights -->
+    <section aria-labelledby="metrics-summary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <h2 id="metrics-summary" class="sr-only">Model Performance Summary</h2>
+      
+      <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">SVM Accuracy</p>
+          <p class="text-2xl font-extrabold text-blue-600 mt-1">96.2%</p>
+          <p class="text-xs text-slate-400 mt-0.5">RBF Kernel + PCA (100)</p>
+        </div>
+        <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+          <i data-lucide="shield-check" class="w-6 h-6"></i>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">CNN Accuracy</p>
+          <p class="text-2xl font-extrabold text-rose-600 mt-1">94.8%</p>
+          <p class="text-xs text-slate-400 mt-0.5">2D/3D Convolutional Net</p>
+        </div>
+        <div class="p-3 bg-rose-50 text-rose-600 rounded-xl">
+          <i data-lucide="layers" class="w-6 h-6"></i>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Feature Reduction</p>
+          <p class="text-2xl font-extrabold text-indigo-600 mt-1">100 PCA</p>
+          <p class="text-xs text-slate-400 mt-0.5">From 12,288 raw pixels</p>
+        </div>
+        <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+          <i data-lucide="cpu" class="w-6 h-6"></i>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Inference Speed</p>
+          <p class="text-2xl font-extrabold text-emerald-600 mt-1">&lt; 15 ms</p>
+          <p class="text-xs text-slate-400 mt-0.5">Fast Real-time Response</p>
+        </div>
+        <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+          <i data-lucide="zap" class="w-6 h-6"></i>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Diagnostic Workflow Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <!-- Upload & Test Card (7 Cols) -->
+      <section aria-labelledby="upload-heading" class="lg:col-span-7 bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 space-y-6">
+        <div class="border-b border-slate-100 pb-4">
+          <h2 id="upload-heading" class="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <i data-lucide="file-up" class="w-5 h-5 text-indigo-600"></i>
+            Upload CT Scan for Diagnosis
+          </h2>
+          <p class="text-sm text-slate-500 mt-1">
+            Upload an axial CT slice image or choose one of the verified sample CT scans below to test the SVM model.
+          </p>
+        </div>
+
+        <!-- Sample Quick-Select Buttons -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
+            Quick Test with Preloaded CT Scans
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="sample-buttons">
+            <button type="button" onclick="loadSample('normal_sample.png')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 transition text-left group">
+              <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-xs shrink-0 group-hover:scale-105 transition">
+                CT-1
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-slate-800">Sample: Normal</p>
+                <p class="text-xs text-slate-500">Healthy tissue scan</p>
+              </div>
+            </button>
+            <button type="button" onclick="loadSample('abnormal_sample.png')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-rose-500 hover:bg-rose-50/50 transition text-left group">
+              <div class="w-10 h-10 rounded-lg bg-rose-100 flex items-center justify-center text-rose-700 font-bold text-xs shrink-0 group-hover:scale-105 transition">
+                CT-2
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-slate-800">Sample: Abnormal</p>
+                <p class="text-xs text-slate-500">Malignant nodule present</p>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Dropzone / File Picker -->
+        <form id="prediction-form" class="space-y-4">
+          <div class="relative">
+            <input type="file" id="ct-file-input" accept="image/png, image/jpeg, image/jpg" class="sr-only" aria-errormessage="file-error">
+            <label for="ct-file-input" id="drop-zone" class="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer transition bg-slate-50/60 hover:bg-indigo-50/20 group">
+              <div class="p-3 bg-white shadow-sm rounded-full text-slate-500 group-hover:text-indigo-600 transition mb-3">
+                <i data-lucide="cloud-upload" class="w-8 h-8"></i>
+              </div>
+              <p class="text-sm font-medium text-slate-700 text-center">
+                <span class="text-indigo-600 font-semibold underline">Click to choose image</span> or drag and drop
+              </p>
+              <p class="text-xs text-slate-400 mt-1">Supports PNG, JPG, JPEG (Axial Lung CT scans)</p>
+            </label>
+            <span id="file-error" class="error-msg text-xs text-rose-600 mt-1.5 font-medium" role="alert">
+              Please choose a valid image file.
+            </span>
+          </div>
+
+          <!-- Preview & Action Button -->
+          <div id="preview-container" class="hidden flex items-center justify-between p-4 bg-slate-100 rounded-xl">
+            <div class="flex items-center space-x-3">
+              <img id="image-preview" src="#" alt="CT Scan Preview" class="w-14 h-14 object-cover rounded-lg border border-slate-300">
+              <div>
+                <p id="preview-filename" class="text-sm font-semibold text-slate-800 truncate max-w-xs">image.png</p>
+                <p class="text-xs text-slate-500">Ready for classification</p>
+              </div>
+            </div>
+            <button type="button" onclick="clearPreview()" class="text-xs text-slate-500 hover:text-rose-600 font-medium p-1">Remove</button>
+          </div>
+
+          <button type="submit" id="submit-btn" class="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-md shadow-indigo-600/20 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+            <i data-lucide="search" class="w-5 h-5"></i>
+            <span>Run AI Diagnosis</span>
+          </button>
+        </form>
+      </section>
+
+      <!-- Results & Diagnosis Output (5 Cols) -->
+      <section aria-labelledby="results-heading" class="lg:col-span-5 bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 flex flex-col justify-between space-y-6">
+        <div>
+          <div class="border-b border-slate-100 pb-4">
+            <h2 id="results-heading" class="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <i data-lucide="file-check-2" class="w-5 h-5 text-indigo-600"></i>
+              Diagnostic Report
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">Real-time classification result from the trained SVM classifier.</p>
+          </div>
+
+          <!-- Live Accessible Result Container -->
+          <div id="result-box" aria-live="polite" class="mt-6">
+            <!-- Default Placeholder State -->
+            <div id="result-placeholder" class="text-center py-12 px-4 border border-dashed border-slate-200 rounded-xl">
+              <div class="p-3 bg-slate-100 text-slate-400 rounded-full inline-block mb-3">
+                <i data-lucide="scan" class="w-8 h-8"></i>
+              </div>
+              <h3 class="text-sm font-semibold text-slate-700">No CT Scan Analyzed Yet</h3>
+              <p class="text-xs text-slate-400 mt-1 max-w-xs mx-auto">Upload an image or pick a test sample on the left, then click "Run AI Diagnosis".</p>
+            </div>
+
+            <!-- Loading Spinner State -->
+            <div id="result-loading" class="hidden text-center py-12">
+              <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-indigo-600 border-t-transparent"></div>
+              <p class="text-sm font-medium text-slate-600 mt-4">Extracting PCA features & classifying...</p>
+            </div>
+
+            <!-- Diagnostic Card Result -->
+            <div id="result-content" class="hidden space-y-4">
+              <div id="result-badge-card" class="p-5 rounded-2xl border transition">
+                <div class="flex items-center justify-between">
+                  <span id="result-badge" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"></span>
+                  <span id="result-confidence" class="text-sm font-extrabold text-slate-700"></span>
+                </div>
+                <h3 id="result-title" class="text-xl font-black mt-3"></h3>
+                <p id="result-risk" class="text-xs mt-1 font-medium text-slate-600"></p>
+              </div>
+
+              <!-- Confidence Progress Bar -->
+              <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1.5">
+                  <span>Confidence Level</span>
+                  <span id="bar-percentage">0%</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                  <div id="confidence-bar" class="h-2.5 rounded-full transition-all duration-700" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- Recommendations Note -->
+              <div class="p-4 bg-amber-50/70 border border-amber-200/70 rounded-xl text-xs text-amber-800 space-y-1">
+                <p class="font-bold flex items-center gap-1.5 text-amber-900">
+                  <i data-lucide="info" class="w-4 h-4 shrink-0"></i>
+                  Clinical Decision Support Notice
+                </p>
+                <p class="leading-relaxed">
+                  This AI diagnostic output is generated for clinical decision support and comparative research. Final medical determinations must be confirmed by a radiologist.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+          <span>Trained with SVM (RBF)</span>
+          <span>Dimensionality: PCA 100</span>
+        </div>
+      </section>
+    </div>
+
+    <!-- Comparative Accuracy Section -->
+    <section aria-labelledby="comparison-heading" class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+        <div>
+          <h2 id="comparison-heading" class="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <i data-lucide="bar-chart-3" class="w-5 h-5 text-indigo-600"></i>
+            Comparative Accuracy Analysis: SVM vs CNN
+          </h2>
+          <p class="text-sm text-slate-500 mt-1">
+            Benchmark comparison of the Support Vector Machine (with PCA) against the Convolutional Neural Network.
+          </p>
+        </div>
+        <div class="flex items-center gap-4 text-xs font-semibold">
+          <div class="flex items-center gap-1.5">
+            <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+            <span>SVM Classifier</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+            <span>CNN Deep Model</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+        <!-- Chart Canvas -->
+        <div class="md:col-span-7 h-64 sm:h-72">
+          <canvas id="accuracyChart"></canvas>
+        </div>
+
+        <!-- Technical Specification Table -->
+        <div class="md:col-span-5 bg-slate-50 rounded-xl p-5 border border-slate-200 space-y-3 text-xs">
+          <h3 class="font-bold text-slate-800 text-sm mb-2">Model Specifications</h3>
+          <div class="flex justify-between py-1.5 border-b border-slate-200">
+            <span class="text-slate-500">Input Resolution</span>
+            <span class="font-semibold text-slate-800">64 &times; 64 &times; 3</span>
+          </div>
+          <div class="flex justify-between py-1.5 border-b border-slate-200">
+            <span class="text-slate-500">Feature Extractor</span>
+            <span class="font-semibold text-slate-800">PCA (100 components)</span>
+          </div>
+          <div class="flex justify-between py-1.5 border-b border-slate-200">
+            <span class="text-slate-500">SVM Hyperparameters</span>
+            <span class="font-semibold text-slate-800">Kernel: RBF, C: 1.0</span>
+          </div>
+          <div class="flex justify-between py-1.5 border-b border-slate-200">
+            <span class="text-slate-500">CNN Architecture</span>
+            <span class="font-semibold text-slate-800">Conv2D(32)&times;2 + Dense(256)</span>
+          </div>
+          <div class="flex justify-between py-1.5">
+            <span class="text-slate-500">Dataset Split Ratio</span>
+            <span class="font-semibold text-slate-800">80% Train / 20% Test</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
+    <p>Project: Detection of Lung Cancer from CT Image using SVM & CNN | Created by Vishnu Vardhan</p>
+    <p class="mt-1">Deployed live on Render via Flask & Gunicorn</p>
+  </footer>
+
+  <!-- Application Logic -->
+  <script>
+    lucide.createIcons();
+
+    let selectedSample = null;
+    let selectedFile = null;
+
+    // Elements
+    const fileInput = document.getElementById('ct-file-input');
+    const previewContainer = document.getElementById('preview-container');
+    const imagePreview = document.getElementById('image-preview');
+    const previewFilename = document.getElementById('preview-filename');
+    const predictionForm = document.getElementById('prediction-form');
+
+    const resultPlaceholder = document.getElementById('result-placeholder');
+    const resultLoading = document.getElementById('result-loading');
+    const resultContent = document.getElementById('result-content');
+    const resultBadgeCard = document.getElementById('result-badge-card');
+    const resultBadge = document.getElementById('result-badge');
+    const resultConfidence = document.getElementById('result-confidence');
+    const resultTitle = document.getElementById('result-title');
+    const resultRisk = document.getElementById('result-risk');
+    const confidenceBar = document.getElementById('confidence-bar');
+    const barPercentage = document.getElementById('bar-percentage');
+
+    // Handle file selection
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        selectedFile = file;
+        selectedSample = null;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          imagePreview.src = event.target.result;
+          previewFilename.textContent = file.name;
+          previewContainer.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Handle quick sample selection
+    function loadSample(sampleName) {
+      selectedSample = sampleName;
+      selectedFile = null;
+      fileInput.value = '';
+      imagePreview.src = '/samples/' + sampleName;
+      previewFilename.textContent = sampleName;
+      previewContainer.classList.remove('hidden');
+    }
+
+    function clearPreview() {
+      selectedFile = null;
+      selectedSample = null;
+      fileInput.value = '';
+      previewContainer.classList.add('hidden');
+    }
+
+    // Submit handler
+    predictionForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!selectedFile && !selectedSample) {
+        alert('Please choose an image or click one of the quick test CT scan samples first.');
+        return;
+      }
+
+      // Show loading
+      resultPlaceholder.classList.add('hidden');
+      resultContent.classList.add('hidden');
+      resultLoading.classList.remove('hidden');
+
+      try {
+        let res;
+        if (selectedFile) {
+          const formData = new FormData();
+          formData.append('file', selectedFile);
+          res = await fetch('/api/predict', { method: 'POST', body: formData });
+        } else {
+          res = await fetch('/api/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sample: selectedSample })
+          });
+        }
+
+        const data = await res.json();
+        resultLoading.classList.add('hidden');
+
+        if (data.status === 'success') {
+          resultContent.classList.remove('hidden');
+
+          resultTitle.textContent = data.label;
+          resultRisk.textContent = data.risk_level;
+          resultConfidence.textContent = data.confidence + '% Confidence';
+          barPercentage.textContent = data.confidence + '%';
+          confidenceBar.style.width = data.confidence + '%';
+
+          if (data.is_cancer) {
+            resultBadgeCard.className = 'p-5 rounded-2xl border border-rose-300 bg-rose-50/70 text-rose-950 transition';
+            resultBadge.className = 'px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-200 text-rose-800';
+            resultBadge.textContent = 'Malignant / Abnormal';
+            resultTitle.className = 'text-xl font-black mt-3 text-rose-900';
+            confidenceBar.className = 'h-2.5 rounded-full transition-all duration-700 bg-rose-600';
+          } else {
+            resultBadgeCard.className = 'p-5 rounded-2xl border border-emerald-300 bg-emerald-50/70 text-emerald-950 transition';
+            resultBadge.className = 'px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-200 text-emerald-800';
+            resultBadge.textContent = 'Healthy / Normal';
+            resultTitle.className = 'text-xl font-black mt-3 text-emerald-900';
+            confidenceBar.className = 'h-2.5 rounded-full transition-all duration-700 bg-emerald-600';
+          }
+        } else {
+          alert('Prediction error: ' + (data.error || 'Unknown error'));
+          resultPlaceholder.classList.remove('hidden');
+        }
+      } catch (err) {
+        resultLoading.classList.add('hidden');
+        resultPlaceholder.classList.remove('hidden');
+        alert('Failed to connect to diagnostic server: ' + err.message);
+      }
+    });
+
+    // Render Chart.js
+    const ctx = document.getElementById('accuracyChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Support Vector Machine (SVM)', 'Convolutional Neural Net (CNN)'],
+        datasets: [{
+          label: 'Accuracy (%)',
+          data: [96.2, 94.8],
+          backgroundColor: ['#3B82F6', '#EF4444'],
+          borderRadius: 8,
+          barPercentage: 0.5
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            ticks: {
+              callback: function(val) { return val + '%'; }
+            }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
